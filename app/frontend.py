@@ -287,14 +287,14 @@ def display_revocation_authorization():
             return jsonify({"status": "error", "message": "Invalid JSON payload"}), 400
 
         display_list = data_payload.get("display_list")
-        revocation_id = data_payload.get("revocation_id")
+        revocation_identifier = data_payload.get("revocation_identifier")
         redirect_url = data_payload.get("redirect_url")
         revocation_choice_url = data_payload.get("revocation_choice_url")
 
         return render_template(
             "misc/revocation_authorization.html",
             display_list=display_list,
-            revocation_identifier=revocation_id,
+            revocation_identifier=revocation_identifier,
             redirect_url=redirect_url,
             revocation_choice_url=revocation_choice_url,
         )
@@ -304,7 +304,7 @@ def display_revocation_authorization():
 
 @frontend.route("/display_revocation_success", methods=["POST"])
 def display_revocation_success():
-    raw_json_string = request.form.get("payload")
+    """ raw_json_string = request.form.get("payload")
 
     if raw_json_string:
         try:
@@ -313,14 +313,14 @@ def display_revocation_success():
         except json.JSONDecodeError:
             return jsonify({"status": "error", "message": "Invalid JSON payload"}), 400
 
-        redirect_url = data_payload.get("redirect_url")
+        redirect_url = data_payload.get("redirect_url") """
 
-        return render_template(
-            "misc/revocation_success.html",
-            redirect_url=redirect_url,
-        )
+    return render_template(
+        "misc/revocation_success.html",
+        redirect_url=cfgservice.service_url,
+    )
 
-    return jsonify({"status": "error", "message": "Payload not found"}), 400
+    #return jsonify({"status": "error", "message": "Payload not found"}), 400
 
 
 @frontend.route("/display_credential_offer", methods=["POST"])
