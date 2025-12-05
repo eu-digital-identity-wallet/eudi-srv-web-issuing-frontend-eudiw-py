@@ -200,6 +200,7 @@ def create_app(test_config=None):
             "misc/initial_page.html",
             oidc=f"{cfgserv.service_url}/.well-known/openid-credential-issuer",
             service_url=cfgserv.service_url,
+            revocation_url= f"{cfgserv.issuer_url}/revocation/revocation_choice",
         )
 
     @app.route("/favicon.ico")
