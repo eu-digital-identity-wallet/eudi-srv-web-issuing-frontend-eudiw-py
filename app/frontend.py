@@ -17,7 +17,7 @@ from flask import (
 )
 
 from app_config.config_service import ConfService as cfgservice
-from app import oidc_metadata, openid_metadata
+from app import oidc_metadata, openid_metadata, signed_metadata
 
 frontend = Blueprint("frontend", __name__, url_prefix="/")
 CORS(frontend)
@@ -122,6 +122,7 @@ def display_form():
 @frontend.route("/display_authorization", methods=["POST"])
 def display_authorization():
     raw_json_string = request.form.get("payload")
+    print(f"Display Authorization\n: {raw_json_string}", flush=True)
 
     if raw_json_string:
         try:
@@ -194,20 +195,19 @@ def credentialOffer():
 @frontend.route("/.well-known/<service>")
 def well_known(service):
     if service == "openid-credential-issuer":
-        info = {
-            "response": oidc_metadata,
-            "http_headers": [
-                ("Content-type", "application/json"),
-                ("Pragma", "no-cache"),
-                ("Cache-Control", "no-store"),
-            ],
-        }
 
-        _http_response_code = info.get("response_code", 200)
-        resp = make_response(info["response"], _http_response_code)
+        accept = request.headers.get("Accept", "")
+        wants_jwt = "application/jwt" in accept
 
-        for key, value in info["http_headers"]:
-            resp.headers[key] = value
+        if wants_jwt:
+            resp = make_response(signed_metadata, 200)
+            resp.headers["Content-Type"] = "application/jwt"
+        else:
+            resp = make_response(oidc_metadata, 200)
+            resp.headers["Content-Type"] = "application/json"
+
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Cache-Control"] = "no-store"
 
         return resp
 

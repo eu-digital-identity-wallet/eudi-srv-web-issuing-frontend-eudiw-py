@@ -49,7 +49,7 @@ from app_config.config_service import ConfService as cfgserv
 oidc_metadata: Dict[str, Any] = {}
 openid_metadata: Dict[str, Any] = {}
 oauth_metadata: Dict[str, Any] = {}
-
+signed_metadata: str = None
 
 def replace_domain(
     obj: Union[Dict[str, Any], List[Any], str, Any], old: str, new: str
@@ -69,6 +69,7 @@ def setup_metadata():
     global oidc_metadata_clean
     global openid_metadata
     global oauth_metadata
+    global signed_metadata
 
     credentials_supported: Dict[str, Any] = {}
 
@@ -151,6 +152,27 @@ def setup_metadata():
     openid_metadata["pushed_authorization_request_endpoint"] = f"{cfgserv.service_url}/pushed_authorization"
     oidc_metadata["credential_issuer"] = cfgserv.service_url
     oidc_metadata["display"][0]["logo"]["uri"] = f"{cfgserv.service_url}/ic-logo.png"
+
+
+    metadata_signing_endpoint = f"{cfgserv.issuer_url}/metadata/metadata_signer"
+    
+    payload = {
+    "metadata": oidc_metadata,
+    "issuer_frontend_id": cfgserv.frontend_id,
+    "iss": cfgserv.service_url
+    }
+
+    response = requests.post(
+        metadata_signing_endpoint,
+        json=payload,
+        headers={"Content-Type": "application/json"},
+        timeout=10,
+    )
+
+    response.raise_for_status()
+
+    signed_metadata = response.json()["signed_metadata"]
+
 
 
 setup_metadata()
