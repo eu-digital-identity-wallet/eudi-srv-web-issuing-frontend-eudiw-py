@@ -9,7 +9,7 @@ from flask import (
     redirect,
 )
 
-from app_config.config_service import ConfService as cfgservice
+from app import CONFIGURATION
 
 authorization_endpoint = Blueprint("authorization_endpoint", __name__, url_prefix="/")
 CORS(authorization_endpoint)
@@ -28,7 +28,7 @@ def pushed_authorization():
             # Convert form data to dict
             body = request.form.to_dict()
 
-        body["frontend_id"] = cfgservice.frontend_id
+        body["frontend_id"] = CONFIGURATION['frontend_id']
 
         forward_headers = {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -38,7 +38,7 @@ def pushed_authorization():
         }
 
         response = requests.post(
-            f"{cfgservice.oauth_url}/pushed_authorization",
+            f"{CONFIGURATION['oauth_url']}/pushed_authorization",
             data=body,  # Send as form data
             headers=forward_headers,
             timeout=30,

@@ -45,7 +45,6 @@ from flask.helpers import make_response
 # Local/project-specific imports
 from app import oidc_metadata
 from app import trusted_CAs
-from app_config.config_service import ConfService as cfgservice
 from redirect_func import url_get
 
 
