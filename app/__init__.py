@@ -55,7 +55,7 @@ signed_metadata: str = None
 
 
 def _load_config() -> dict:
-    config_path = "/etc/issuer_config/frontend_config.yaml"
+    config_path = os.environ.get("ISSUER_CONFIG_PATH", "/etc/issuer_config/frontend_config.yaml")
     try:
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
