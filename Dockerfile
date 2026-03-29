@@ -4,14 +4,15 @@ FROM node:lts-slim AS node-builder
 WORKDIR /build
 
 COPY package*.json ./
-COPY assets/ ./assets/
 COPY tailwind.config.* ./
 COPY postcss.config.* ./
+COPY assets/ ./assets/
+
+# Everything Tailwind scans per tailwind.config.js content array
+COPY templates/ ./templates/
+COPY app/ ./app/
 
 RUN npm install
-
-COPY app/templates/ ./app/templates/
-
 RUN npm run build
 
 # ── Stage 2: Python deps ──────────────────────────────────────────────────────
