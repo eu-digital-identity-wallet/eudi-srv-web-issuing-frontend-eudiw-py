@@ -4,10 +4,14 @@ FROM node:lts-slim AS node-builder
 WORKDIR /build
 
 COPY package*.json ./
+COPY assets/ ./assets/
+COPY tailwind.config.* ./
+COPY postcss.config.* ./
 
 RUN npm install
 
-COPY . .
+COPY app/templates/ ./app/templates/
+
 RUN npm run build
 
 # ── Stage 2: Python deps ──────────────────────────────────────────────────────
@@ -38,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=python-builder /install /usr/local
-COPY --from=node-builder /build/dist ./app/static/dist
+COPY --from=node-builder /build/app/static/css/tailwind.css ./app/static/css/tailwind.css
 COPY . .
 
 ENV FLASK_APP=app
