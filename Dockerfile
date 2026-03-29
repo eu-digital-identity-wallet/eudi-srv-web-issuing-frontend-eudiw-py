@@ -7,9 +7,6 @@ COPY package*.json ./
 COPY tailwind.config.* ./
 COPY postcss.config.* ./
 COPY assets/ ./assets/
-
-# Everything Tailwind scans per tailwind.config.js content array
-COPY templates/ ./templates/
 COPY app/ ./app/
 
 RUN npm install
