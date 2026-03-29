@@ -214,6 +214,12 @@ def setup_metadata():
 
             credentials_supported = data.get("credential_configurations_supported", {})
 
+            credential_request_encryption = data.get("credential_request_encryption")
+            if credential_request_encryption:
+                logger.info("credential_request_encryption fetched from backend: %s", json.dumps(credential_request_encryption, indent=2))
+            else:
+                logger.warning("credential_request_encryption not found in backend metadata")
+
             if CONFIGURATION['credentials_supported'] and CONFIGURATION['credentials_supported'] != ["*"] and CONFIGURATION['credentials_supported'] != "*":
                 allowed_credentials = set(CONFIGURATION['credentials_supported'])
                 credentials_supported = {
@@ -247,6 +253,10 @@ def setup_metadata():
         raise
 
     oidc_metadata["credential_configurations_supported"] = credentials_supported
+
+    if credential_request_encryption:
+        oidc_metadata["credential_request_encryption"] = credential_request_encryption
+        logger.info("credential_request_encryption set on oidc_metadata")
 
     old_domain = oidc_metadata["credential_issuer"]
     new_domain = CONFIGURATION['issuer_url']
