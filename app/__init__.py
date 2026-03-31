@@ -122,7 +122,7 @@ def create_app(test_config=None):
             "misc/initial_page.html",
             oidc=f"{CONFIGURATION['service_url']}/.well-known/openid-credential-issuer",
             service_url=CONFIGURATION['service_url'],
-            revocation_url= f"{CONFIGURATION['issuer_url']}/revocation/revocation_choice",
+            revocation_url= f"{CONFIGURATION['backend_url']}/revocation/revocation_choice",
         )
 
     @app.route("/favicon.ico")
@@ -204,7 +204,7 @@ def setup_metadata():
             oidc_metadata = json.load(metadata)
             oidc_metadata_clean = copy.deepcopy(oidc_metadata)
 
-        metadata_endpoint = f"{CONFIGURATION['issuer_url']}/.well-known/openid-credential-issuer"
+        metadata_endpoint = f"{CONFIGURATION['backend_url']}/.well-known/openid-credential-issuer"
 
         try:
             response = requests.get(metadata_endpoint)
@@ -259,7 +259,7 @@ def setup_metadata():
         logger.info("credential_request_encryption set on oidc_metadata")
 
     old_domain = oidc_metadata["credential_issuer"]
-    new_domain = CONFIGURATION['issuer_url']
+    new_domain = CONFIGURATION['backend_url']
 
     oidc_domain = CONFIGURATION['oauth_url']
 
@@ -282,7 +282,7 @@ def setup_metadata():
     oidc_metadata["display"][0]["logo"]["uri"] = f"{CONFIGURATION['service_url']}/ic-logo.png"
 
 
-    metadata_signing_endpoint = f"{CONFIGURATION['issuer_url']}/metadata/metadata_signer"
+    metadata_signing_endpoint = f"{CONFIGURATION['backend_url']}/metadata/metadata_signer"
     
     payload = {
     "metadata": oidc_metadata,

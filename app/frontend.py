@@ -86,7 +86,7 @@ def display_countries():
             "dynamic/dynamic-countries.html",
             countries=countries,
             session_id=session_id,
-            redirect_url=CONFIGURATION['issuer_url'],
+            redirect_url=CONFIGURATION['backend_url'],
         )
 
     return jsonify({"status": "error", "message": "Payload not found"}), 400
@@ -191,7 +191,7 @@ def display_pid_login():
 @frontend.route("/credential_offer", methods=["GET", "POST"])
 def credentialOffer():
     return redirect(
-        f"{CONFIGURATION['issuer_url']}/credential_offer_choice?frontend_id={CONFIGURATION['frontend_id']}"
+        f"{CONFIGURATION['backend_url']}/credential_offer_choice?frontend_id={CONFIGURATION['frontend_id']}"
     )
 
 
