@@ -4,13 +4,13 @@ For configuring your locally installed version of the EUDIW Issuer Front-end, yo
 
 ## 1. Service Configuration
 
-Base configuration for the EUDIW Issuer Front-end is located in ```.env```.
+Base configuration example for the EUDIW Issuer Front-end is located in ```frontend_config_example.yaml```.
 
 Parameters that should be changed:
 
-- `SERVICE_URL` (Base url of the service)
-- `FRONTEND_ID` (The front-end id registered in the backend service)
-- `ISSUER_URL` (Base url for the back-end service)
-- `OAUTH_URL` (Base url for the authorization service)
-- `CREDENTIALS_SUPPORTED` (List of credentials supported by this front-end)
-- `LOG_DIR` (Log directory)
+- `service_url` (Base url of the service)
+- `frontend_id` (The front-end id registered in the backend service)
+- `backend_url` (Base url for the back-end service)
+- `oauth_url` (Base url for the authorization service)
+- `credentials_supported` (Credentials supported by this front-end)
+- `log_dir` (Log directory)
