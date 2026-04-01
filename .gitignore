@@ -203,6 +203,8 @@ app/tests/output.xml
 app/tests/report.html
 log
 
+frontend_config.yaml
+
 # Node.js / npm
 # =========================
 # The entire node_modules directory

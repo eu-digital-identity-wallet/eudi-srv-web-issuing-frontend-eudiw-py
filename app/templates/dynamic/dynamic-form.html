@@ -66,6 +66,30 @@
         </label>
     </div>
 
+    {% elif attr.type == 'list_string' %}
+    <div class="p-4 border border-gray-200 rounded-md space-y-4 mb-4 list-string-container" data-list-name="{{ name }}">
+        <h3 class="text-lg font-semibold text-gray-800">{{ name | replace('_', ' ') | title }}</h3>
+        <div class="list-string-items-wrapper space-y-2">
+            <div class="list-string-item flex items-center gap-2">
+                <input type="text" 
+                    name="{{ current_name }}[]" 
+                    class="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500"
+                    placeholder="Enter {{ name | replace('_', ' ') }}"
+                    {% if attr.get('mandatory') %}required{% endif %}>
+            </div>
+        </div>
+        
+        {# Add Item Button #}
+        {% if attr.get('cardinality', {}).get('max') != 1 %}
+        <button type="button" 
+            class="add-string-item text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+            data-parent-name="{{ name }}"
+            data-current-name="{{ current_name }}">
+            + Add {{ name | replace('_', ' ') | title }}
+        </button>
+        {% endif %}
+    </div>
+
     {# List Type (Recursive & Conditional Logic) #}
     {% elif attr.type == 'list' %}
     <div class="p-4 border border-gray-200 rounded-md space-y-4 mb-4 list-container" data-list-name="{{ name }}" {% if
@@ -344,7 +368,40 @@
                 if (event.target.classList.contains('remove-list-item')) {
                     event.target.closest('.list-item').remove();
                 }
+                
+                // --- Handle Adding a new string item to list_string ---
+                if (event.target.classList.contains('add-string-item')) {
+                    const button = event.target;
+                    const container = button.closest('.list-string-container');
+                    const wrapper = container.querySelector('.list-string-items-wrapper');
+                    const currentName = button.dataset.currentName;
+                    
+                    const newItem = document.createElement('div');
+                    newItem.className = 'list-string-item flex items-center gap-2';
+                    newItem.innerHTML = `
+                        <input type="text" 
+                            name="${currentName}[]" 
+                            class="flex-1 p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500"
+                            placeholder="Enter value">
+                        <button type="button" 
+                            class="remove-string-item text-red-500 hover:text-red-700 px-3 py-2">
+                            &times;
+                        </button>
+                    `;
+                    wrapper.appendChild(newItem);
+                }
 
+                // --- Handle Removing a string item from list_string ---
+                if (event.target.classList.contains('remove-string-item')) {
+                    const item = event.target.closest('.list-string-item');
+                    const wrapper = item.closest('.list-string-items-wrapper');
+                    
+                    // Only remove if there's more than one item
+                    if (wrapper.querySelectorAll('.list-string-item').length > 1) {
+                        item.remove();
+                    }
+                }
+                
                 // --- Handle toggling choices like 'place_of_work' ---
                 const toggleOption = event.target.closest('.toggle-option input[type="radio"]');
                 if (toggleOption) {
@@ -473,6 +530,8 @@
                     }
                 }
             });
+
+            
         });
 
 

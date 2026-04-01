@@ -26,7 +26,8 @@ import copy
 import json
 import os
 import sys
-
+import logging
+import yaml
 import requests
 
 sys.path.append(os.path.dirname(__file__))
@@ -42,125 +43,41 @@ from werkzeug.debug import *
 from werkzeug.exceptions import HTTPException
 from typing import Dict, Any, List, Union, cast
 
-from app_config.config_service import ConfService as cfgserv
+from app.app_config.logging_config import configure_logging
+
 
 # Log
 
 oidc_metadata: Dict[str, Any] = {}
 openid_metadata: Dict[str, Any] = {}
 oauth_metadata: Dict[str, Any] = {}
+signed_metadata: str = None
 
 
-def replace_domain(
-    obj: Union[Dict[str, Any], List[Any], str, Any], old: str, new: str
-) -> Union[Dict[str, Any], List[Any], str, Any]:
-    if isinstance(obj, dict):
-        return {k: replace_domain(v, old, new) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [replace_domain(i, old, new) for i in obj]
-    elif isinstance(obj, str):
-        return obj.replace(old, new)
-    else:
-        return obj
-
-
-def setup_metadata():
-    global oidc_metadata
-    global oidc_metadata_clean
-    global openid_metadata
-    global oauth_metadata
-
-    credentials_supported: Dict[str, Any] = {}
-
+def _load_config() -> dict:
+    config_path = os.environ.get("ISSUER_CONFIG_PATH", "/etc/issuer_config/frontend_config.yaml")
     try:
-        dir_path = os.path.dirname(os.path.realpath(__file__))
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        if not config:
+            raise RuntimeError(f"Config file is empty: {config_path}")
+    except FileNotFoundError:
+        raise RuntimeError(f"Config file not found: {config_path}")
+    except yaml.YAMLError as e:
+        raise RuntimeError(f"Invalid YAML in config: {e}")
 
-        with open(dir_path + "/metadata_config/openid-configuration.json") as f:
-            openid_metadata = json.load(f)
+    return config
 
-        with open(dir_path + "/metadata_config/oauth-authorization-server.json") as f:
-            oauth_metadata = json.load(f)
+CONFIGURATION = _load_config()
 
-        with open(dir_path + "/metadata_config/metadata_config.json") as metadata:
-            oidc_metadata = json.load(metadata)
-            oidc_metadata_clean = copy.deepcopy(oidc_metadata)
-
-        metadata_endpoint = f"{cfgserv.issuer_url}/.well-known/openid-credential-issuer"
-
-        try:
-            response = requests.get(metadata_endpoint)
-            response.raise_for_status()
-
-            data = response.json()
-
-            credentials_supported = data.get("credential_configurations_supported", {})
-
-            if cfgserv.credentials_supported != "*":
-                allowed_credentials = set(c.strip() for c in cfgserv.credentials_supported.split(","))
-                credentials_supported = {
-                    k: v for k, v in credentials_supported.items() if k in allowed_credentials
-                }
-
-        except Exception:
-            for file in os.listdir(
-                dir_path + "/metadata_config/credentials_supported/"
-            ):
-                if file.endswith("json"):
-                    json_path = os.path.join(
-                        dir_path + "/metadata_config/credentials_supported/", file
-                    )
-                    with open(json_path, encoding="utf-8") as json_file:
-                        credential = json.load(json_file)
-                        credentials_supported.update(credential)
-
-    except FileNotFoundError as e:
-        cfgserv.app_logger.exception(f"Metadata Error: file not found. \n{e}")
-        raise
-    except json.JSONDecodeError as e:
-        cfgserv.app_logger.exception(
-            f"Metadata Error: Metadata Unable to decode JSON. \n{e}"
-        )
-        raise
-    except Exception as e:
-        cfgserv.app_logger.exception(
-            f"Metadata Error: An unexpected error occurred. \n{e}"
-        )
-        raise
-
-    oidc_metadata["credential_configurations_supported"] = credentials_supported
-
-    old_domain = oidc_metadata["credential_issuer"]
-    new_domain = cfgserv.issuer_url
-
-    oidc_domain = cfgserv.oauth_url
-
-    openid_metadata = cast(
-        Dict[str, Any], replace_domain(openid_metadata, f"{old_domain}/oidc", oidc_domain)
-    )
-
-    oauth_metadata = cast(
-        Dict[str, Any], replace_domain(oauth_metadata, old_domain, new_domain)
-    )
-    
-    oidc_metadata = cast(
-        Dict[str, Any], replace_domain(oidc_metadata, old_domain, new_domain)
-    )
-
-
-    openid_metadata["issuer"] = cfgserv.service_url
-    openid_metadata["pushed_authorization_request_endpoint"] = f"{cfgserv.service_url}/pushed_authorization"
-    oidc_metadata["credential_issuer"] = cfgserv.service_url
-    oidc_metadata["display"][0]["logo"]["uri"] = f"{cfgserv.service_url}/ic-logo.png"
-
-
-setup_metadata()
+logger = logging.getLogger(__name__)
 
 
 def handle_exception(e):
     # pass through HTTP errors
     if isinstance(e, HTTPException):
         return e
-    cfgserv.app_logger.exception("- WARN - Error 500")
+    logger.exception("- WARN - Error 500")
     # now you're handling non-HTTP exceptions only
     return (
         render_template(
@@ -173,7 +90,7 @@ def handle_exception(e):
 
 
 def page_not_found(e):
-    cfgserv.app_logger.exception("- WARN - Error 404")
+    logger.exception("- WARN - Error 404")
     return (
         render_template(
             "misc/500.html",
@@ -186,7 +103,6 @@ def page_not_found(e):
 
 from typing import Optional
 
-
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -194,13 +110,19 @@ def create_app(test_config=None):
     app.register_error_handler(Exception, handle_exception)
     app.register_error_handler(404, page_not_found)
 
+
+    configure_logging(app, CONFIGURATION)
+    
+    app.logger.info("Running initialization setups...")
+    setup_metadata()
+
     @app.route("/", methods=["GET"])
     def initial_page():
         return render_template(
             "misc/initial_page.html",
-            oidc=f"{cfgserv.service_url}/.well-known/openid-credential-issuer",
-            service_url=cfgserv.service_url,
-            revocation_url= f"{cfgserv.issuer_url}/revocation/revocation_choice",
+            oidc=f"{CONFIGURATION['service_url']}/.well-known/openid-credential-issuer",
+            service_url=CONFIGURATION['service_url'],
+            revocation_url= f"{CONFIGURATION['backend_url']}/revocation/revocation_choice",
         )
 
     @app.route("/favicon.ico")
@@ -242,15 +164,139 @@ def create_app(test_config=None):
     # CORS is a mechanism implemented by browsers to block requests from domains other than the server's one.
     CORS(app, supports_credentials=True)
 
-    cfgserv.app_logger.info(" - DEBUG - FLASK started")
-
-    print(app.url_map)
+    app.logger.info(" - DEBUG - FLASK started")
 
     return app
 
 
-#
-# Usage examples:
-# flask --app app run --debug
-# flask --app app run --debug --cert=app/certs/certHttps.pem --key=app/certs/key.pem --host=127.0.0.1 --port=4430
-#
+def replace_domain(
+    obj: Union[Dict[str, Any], List[Any], str, Any], old: str, new: str
+) -> Union[Dict[str, Any], List[Any], str, Any]:
+    if isinstance(obj, dict):
+        return {k: replace_domain(v, old, new) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [replace_domain(i, old, new) for i in obj]
+    elif isinstance(obj, str):
+        return obj.replace(old, new)
+    else:
+        return obj
+
+
+def setup_metadata():
+    global oidc_metadata
+    global oidc_metadata_clean
+    global openid_metadata
+    global oauth_metadata
+    global signed_metadata
+
+    credentials_supported: Dict[str, Any] = {}
+
+    try:
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        with open(dir_path + "/metadata_config/openid-configuration.json") as f:
+            openid_metadata = json.load(f)
+
+        with open(dir_path + "/metadata_config/oauth-authorization-server.json") as f:
+            oauth_metadata = json.load(f)
+
+        with open(dir_path + "/metadata_config/metadata_config.json") as metadata:
+            oidc_metadata = json.load(metadata)
+            oidc_metadata_clean = copy.deepcopy(oidc_metadata)
+
+        metadata_endpoint = f"{CONFIGURATION['backend_url']}/.well-known/openid-credential-issuer"
+
+        try:
+            response = requests.get(metadata_endpoint)
+            response.raise_for_status()
+
+            data = response.json()
+
+            credentials_supported = data.get("credential_configurations_supported", {})
+
+            credential_request_encryption = data.get("credential_request_encryption")
+            if credential_request_encryption:
+                logger.info("credential_request_encryption fetched from backend: %s", json.dumps(credential_request_encryption, indent=2))
+            else:
+                logger.warning("credential_request_encryption not found in backend metadata")
+
+            if CONFIGURATION['credentials_supported'] and CONFIGURATION['credentials_supported'] != ["*"] and CONFIGURATION['credentials_supported'] != "*":
+                allowed_credentials = set(CONFIGURATION['credentials_supported'])
+                credentials_supported = {
+                    k: v for k, v in credentials_supported.items() if k in allowed_credentials
+                }
+
+        except Exception:
+            for file in os.listdir(
+                dir_path + "/metadata_config/credentials_supported/"
+            ):
+                if file.endswith("json"):
+                    json_path = os.path.join(
+                        dir_path + "/metadata_config/credentials_supported/", file
+                    )
+                    with open(json_path, encoding="utf-8") as json_file:
+                        credential = json.load(json_file)
+                        credentials_supported.update(credential)
+
+    except FileNotFoundError as e:
+        logger.exception(f"Metadata Error: file not found. \n{e}")
+        raise
+    except json.JSONDecodeError as e:
+        logger.exception(
+            f"Metadata Error: Metadata Unable to decode JSON. \n{e}"
+        )
+        raise
+    except Exception as e:
+        logger.exception(
+            f"Metadata Error: An unexpected error occurred. \n{e}"
+        )
+        raise
+
+    oidc_metadata["credential_configurations_supported"] = credentials_supported
+
+    if credential_request_encryption:
+        oidc_metadata["credential_request_encryption"] = credential_request_encryption
+        logger.info("credential_request_encryption set on oidc_metadata")
+
+    old_domain = oidc_metadata["credential_issuer"]
+    new_domain = CONFIGURATION['backend_url']
+
+    oidc_domain = CONFIGURATION['oauth_url']
+
+    openid_metadata = cast(
+        Dict[str, Any], replace_domain(openid_metadata, f"{old_domain}/oidc", oidc_domain)
+    )
+
+    oauth_metadata = cast(
+        Dict[str, Any], replace_domain(oauth_metadata, old_domain, new_domain)
+    )
+    
+    oidc_metadata = cast(
+        Dict[str, Any], replace_domain(oidc_metadata, old_domain, new_domain)
+    )
+
+
+    openid_metadata["issuer"] = CONFIGURATION['service_url']
+    openid_metadata["pushed_authorization_request_endpoint"] = f"{CONFIGURATION['service_url']}/pushed_authorization"
+    oidc_metadata["credential_issuer"] = CONFIGURATION['service_url']
+    oidc_metadata["display"][0]["logo"]["uri"] = f"{CONFIGURATION['service_url']}/ic-logo.png"
+
+
+    metadata_signing_endpoint = f"{CONFIGURATION['backend_url']}/metadata/metadata_signer"
+    
+    payload = {
+    "metadata": oidc_metadata,
+    "issuer_frontend_id": CONFIGURATION['frontend_id'],
+    "iss": CONFIGURATION['service_url']
+    }
+
+    response = requests.post(
+        metadata_signing_endpoint,
+        json=payload,
+        headers={"Content-Type": "application/json"},
+        timeout=10,
+    )
+
+    response.raise_for_status()
+
+    signed_metadata = response.json()["signed_metadata"]

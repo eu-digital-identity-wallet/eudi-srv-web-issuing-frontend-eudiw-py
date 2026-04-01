@@ -68,11 +68,12 @@ To run the EUDIW Issuer Front End, please follow these simple steps (some of whi
 
 6. Setup env
    
-   -  Copy ```.env.example``` to ```.env``` and modify variables.
+   -  Copy ```.frontend_config_example.yaml``` to ```etc/issuer_config/frontend_config_example.yaml``` and modify variables.
 
    ```shell
-   cp .env.example .env
+   cp .frontend_config_example.yaml etc/issuer_config/frontend_config_example.yaml
    ```
+   Configuration location can be changed using environment variable ISSUER_CONFIG_PATH
 
 7. Service Configuration
 

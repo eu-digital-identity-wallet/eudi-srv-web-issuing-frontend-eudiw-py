@@ -36,34 +36,44 @@
 {# recursive macro for nested attributes #}
 {# ===================================================================== #}
 {% macro render_attribute_display(name, value) %}
-{# It's a list of items (like capacities, codes, driving_privileges) #}
-{% if value is sequence and value is not string %}
+
+{# It's a nested dictionary (like place_of_birth) #}
+{% if value is mapping %}
+<div class="attribute-block">
+    <label class="font-pf block font-bold text-custom-gray">{{ name | replace('_', ' ') | title }}</label>
+    <div class="mt-2 pl-4 border-l-2 border-gray-400 space-y-3">
+        {% for sub_name, sub_value in value.items() %}
+            {{ render_attribute_display(sub_name, sub_value) }}
+        {% endfor %}
+    </div>
+</div>
+
+{# It's a list of items (like nationalities, driving_privileges) #}
+{% elif value is sequence and value is not string %}
 <div class="attribute-block">
     <label class="font-pf block font-bold text-custom-gray">{{ name | replace('_', ' ') | title }}</label>
     <div class="mt-2 pl-4 border-l-2 border-gray-400 space-y-3">
         {% for item in value %}
-        {# For each item in the list, create a slightly indented block #}
         <div class="bg-white/60 p-3 rounded-md">
-            {# Check if the item is a dictionary before trying to loop through its items #}
             {% if item is mapping %}
-            {% for sub_name, sub_value in item.items() %}
-            {# Recursively call the macro to display the item's contents #}
-            {{ render_attribute_display(sub_name, sub_value) }}
-            {% endfor %}
-            {# If the item is not a dictionary (e.g., just a string), display it directly #}
+                {% for sub_name, sub_value in item.items() %}
+                    {{ render_attribute_display(sub_name, sub_value) }}
+                {% endfor %}
             {% else %}
-            <p class="font-pf text-base text-custom-gray">{{ item }}</p>
+                <p class="font-pf text-base text-custom-gray">{{ item }}</p>
             {% endif %}
         </div>
         {% endfor %}
     </div>
 </div>
+
 {# It's an image #}
 {% elif name in ["portrait", "issuing_authority_logo", "signature_usual_mark_issuing_officer", "image"] %}
 <div class="attribute-block">
     <label class="block text-base font-bold text-custom-gray">{{ name | title }}</label>
     <img class="mt-1 rounded-lg shadow-md w-32 h-32 object-cover" src="data:image/jpeg;base64,{{ value }}">
 </div>
+
 {# It's a simple value (string, number, etc.) #}
 {% else %}
 <div class="attribute-block">
