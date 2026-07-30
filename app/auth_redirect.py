@@ -1,13 +1,14 @@
 from urllib.parse import urlencode
-from flask_cors import CORS
+
 import requests
 from flask import (
     Blueprint,
     Response,
     jsonify,
-    request,
     redirect,
+    request,
 )
+from flask_cors import CORS
 
 from app import CONFIGURATION
 
@@ -28,7 +29,13 @@ def pushed_authorization():
             # Convert form data to dict
             body = request.form.to_dict()
 
-        body["frontend_id"] = CONFIGURATION['frontend_id']
+        body["frontend_id"] = CONFIGURATION["frontend_id"]
+
+        security_headers_to_forward = [
+            "DPoP",
+            "OAuth-Client-Attestation",
+            "OAuth-Client-Attestation-PoP",
+        ]
 
         forward_headers = {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -36,6 +43,10 @@ def pushed_authorization():
             "Accept-Charset": "UTF-8",
             "User-Agent": request.headers.get("User-Agent", "proxy-service"),
         }
+
+        for header_name in security_headers_to_forward:
+            if header_name in request.headers:
+                forward_headers[header_name] = request.headers[header_name]
 
         response = requests.post(
             f"{CONFIGURATION['oauth_url']}/pushed_authorization",
