@@ -8,3 +8,9 @@ _02 Apr 2026_
 ### Changed
 - Configuration to yaml
 - install.md
+
+## [0.9.5]
+
+_05 Aug 2026_
+
+### 
