@@ -13,4 +13,5 @@ _02 Apr 2026_
 
 _05 Aug 2026_
 
-### 
+### Added
+- Forwarding additional headers in pushed authorization requests.
