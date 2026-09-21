@@ -206,6 +206,7 @@ def setup_metadata():
 
         metadata_endpoint = f"{CONFIGURATION['backend_url']}/.well-known/openid-credential-issuer"
 
+        credential_request_encryption = None
         try:
             response = requests.get(metadata_endpoint)
             response.raise_for_status()
