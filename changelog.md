@@ -15,3 +15,10 @@ _05 Aug 2026_
 
 ### Added
 - Forwarding additional headers in pushed authorization requests.
+
+## [0.10.0]
+
+_07 Oct 2026_
+
+### Added
+- Passthrough registration certificate from backend 
