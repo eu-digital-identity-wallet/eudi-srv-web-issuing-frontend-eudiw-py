@@ -45,7 +45,6 @@ from typing import Dict, Any, List, Union, cast
 
 from app.app_config.logging_config import configure_logging
 
-
 # Log
 
 oidc_metadata: Dict[str, Any] = {}
@@ -55,9 +54,12 @@ signed_metadata: str = None
 
 
 def _load_config() -> dict:
-    config_path = os.environ.get("ISSUER_CONFIG_PATH", "/etc/issuer_config/frontend_config.yaml")
+    config_path = os.environ.get(
+        "ISSUER_CONFIG_PATH",
+        "/etc/issuer_config/frontend_config.yaml",
+    )
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             config = yaml.safe_load(f)
         if not config:
             raise RuntimeError(f"Config file is empty: {config_path}")
@@ -67,6 +69,7 @@ def _load_config() -> dict:
         raise RuntimeError(f"Invalid YAML in config: {e}")
 
     return config
+
 
 CONFIGURATION = _load_config()
 
@@ -103,6 +106,7 @@ def page_not_found(e):
 
 from typing import Optional
 
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
@@ -110,9 +114,8 @@ def create_app(test_config=None):
     app.register_error_handler(Exception, handle_exception)
     app.register_error_handler(404, page_not_found)
 
-
     configure_logging(app, CONFIGURATION)
-    
+
     app.logger.info("Running initialization setups...")
     setup_metadata()
 
@@ -121,8 +124,8 @@ def create_app(test_config=None):
         return render_template(
             "misc/initial_page.html",
             oidc=f"{CONFIGURATION['service_url']}/.well-known/openid-credential-issuer",
-            service_url=CONFIGURATION['service_url'],
-            revocation_url= f"{CONFIGURATION['backend_url']}/revocation/revocation_choice",
+            service_url=CONFIGURATION["service_url"],
+            revocation_url=f"{CONFIGURATION['backend_url']}/revocation/revocation_choice",
         )
 
     @app.route("/favicon.ico")
@@ -190,6 +193,8 @@ def setup_metadata():
     global signed_metadata
 
     credentials_supported: Dict[str, Any] = {}
+    credential_request_encryption = None
+    issuer_info = None
 
     try:
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -204,7 +209,9 @@ def setup_metadata():
             oidc_metadata = json.load(metadata)
             oidc_metadata_clean = copy.deepcopy(oidc_metadata)
 
-        metadata_endpoint = f"{CONFIGURATION['backend_url']}/.well-known/openid-credential-issuer"
+        metadata_endpoint = (
+            f"{CONFIGURATION['backend_url']}/.well-known/openid-credential-issuer"
+        )
 
         try:
             response = requests.get(metadata_endpoint)
@@ -216,14 +223,34 @@ def setup_metadata():
 
             credential_request_encryption = data.get("credential_request_encryption")
             if credential_request_encryption:
-                logger.info("credential_request_encryption fetched from backend: %s", json.dumps(credential_request_encryption, indent=2))
+                logger.info(
+                    "credential_request_encryption fetched from backend: %s",
+                    json.dumps(credential_request_encryption, indent=2),
+                )
             else:
-                logger.warning("credential_request_encryption not found in backend metadata")
+                logger.warning(
+                    "credential_request_encryption not found in backend metadata"
+                )
 
-            if CONFIGURATION['credentials_supported'] and CONFIGURATION['credentials_supported'] != ["*"] and CONFIGURATION['credentials_supported'] != "*":
-                allowed_credentials = set(CONFIGURATION['credentials_supported'])
+            issuer_info = data.get("issuer_info")
+            if issuer_info:
+                logger.info(
+                    "issuer_info fetched from backend: %s",
+                    json.dumps(issuer_info, indent=2),
+                )
+            else:
+                logger.warning("issuer_info not found in backend metadata")
+
+            if (
+                CONFIGURATION["credentials_supported"]
+                and CONFIGURATION["credentials_supported"] != ["*"]
+                and CONFIGURATION["credentials_supported"] != "*"
+            ):
+                allowed_credentials = set(CONFIGURATION["credentials_supported"])
                 credentials_supported = {
-                    k: v for k, v in credentials_supported.items() if k in allowed_credentials
+                    k: v
+                    for k, v in credentials_supported.items()
+                    if k in allowed_credentials
                 }
 
         except Exception:
@@ -242,14 +269,10 @@ def setup_metadata():
         logger.exception(f"Metadata Error: file not found. \n{e}")
         raise
     except json.JSONDecodeError as e:
-        logger.exception(
-            f"Metadata Error: Metadata Unable to decode JSON. \n{e}"
-        )
+        logger.exception(f"Metadata Error: Metadata Unable to decode JSON. \n{e}")
         raise
     except Exception as e:
-        logger.exception(
-            f"Metadata Error: An unexpected error occurred. \n{e}"
-        )
+        logger.exception(f"Metadata Error: An unexpected error occurred. \n{e}")
         raise
 
     oidc_metadata["credential_configurations_supported"] = credentials_supported
@@ -258,36 +281,45 @@ def setup_metadata():
         oidc_metadata["credential_request_encryption"] = credential_request_encryption
         logger.info("credential_request_encryption set on oidc_metadata")
 
-    old_domain = oidc_metadata["credential_issuer"]
-    new_domain = CONFIGURATION['backend_url']
+    if issuer_info:
+        oidc_metadata["issuer_info"] = issuer_info
+        logger.info("issuer_info set on oidc_metadata")
 
-    oidc_domain = CONFIGURATION['oauth_url']
+    old_domain = oidc_metadata["credential_issuer"]
+    new_domain = CONFIGURATION["backend_url"]
+
+    oidc_domain = CONFIGURATION["oauth_url"]
 
     openid_metadata = cast(
-        Dict[str, Any], replace_domain(openid_metadata, f"{old_domain}/oidc", oidc_domain)
+        Dict[str, Any],
+        replace_domain(openid_metadata, f"{old_domain}/oidc", oidc_domain),
     )
 
     oauth_metadata = cast(
         Dict[str, Any], replace_domain(oauth_metadata, old_domain, new_domain)
     )
-    
+
     oidc_metadata = cast(
         Dict[str, Any], replace_domain(oidc_metadata, old_domain, new_domain)
     )
 
+    openid_metadata["issuer"] = CONFIGURATION["service_url"]
+    openid_metadata["pushed_authorization_request_endpoint"] = (
+        f"{CONFIGURATION['service_url']}/pushed_authorization"
+    )
+    oidc_metadata["credential_issuer"] = CONFIGURATION["service_url"]
+    oidc_metadata["display"][0]["logo"][
+        "uri"
+    ] = f"{CONFIGURATION['service_url']}/ic-logo.png"
 
-    openid_metadata["issuer"] = CONFIGURATION['service_url']
-    openid_metadata["pushed_authorization_request_endpoint"] = f"{CONFIGURATION['service_url']}/pushed_authorization"
-    oidc_metadata["credential_issuer"] = CONFIGURATION['service_url']
-    oidc_metadata["display"][0]["logo"]["uri"] = f"{CONFIGURATION['service_url']}/ic-logo.png"
+    metadata_signing_endpoint = (
+        f"{CONFIGURATION['backend_url']}/metadata/metadata_signer"
+    )
 
-
-    metadata_signing_endpoint = f"{CONFIGURATION['backend_url']}/metadata/metadata_signer"
-    
     payload = {
-    "metadata": oidc_metadata,
-    "issuer_frontend_id": CONFIGURATION['frontend_id'],
-    "iss": CONFIGURATION['service_url']
+        "metadata": oidc_metadata,
+        "issuer_frontend_id": CONFIGURATION["frontend_id"],
+        "iss": CONFIGURATION["service_url"],
     }
 
     response = requests.post(
