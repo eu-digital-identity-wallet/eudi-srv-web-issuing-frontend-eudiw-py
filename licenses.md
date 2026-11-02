@@ -15,5 +15,4 @@
 | cwt                       | 2.3.2     | MIT License                                         | https://github.com/dajiaji/python-cwt/                          | https://github.com/dajiaji/python-cwt/blob/main/LICENSE|
 | PyJWT                     | 2.8.0     | MIT License                                         | https://github.com/jpadilla/pyjwt/                              | https://github.com/jpadilla/pyjwt/blob/master/LICENSE|
 | schedule                  | 1.2.1     | MIT License                                         | https://github.com/dbader/schedule/                             | https://github.com/dbader/schedule/blob/master/LICENSE.txt|
-| gunicorn                  | 22.0.0    | MIT License                                         | https://github.com/benoitc/gunicorn/                           | https://github.com/benoitc/gunicorn/blob/master/LICENSE|
 | pymdoccbor                | 0.5.4     | Apache Software License 2.0                         | https://github.com/peppelinux/

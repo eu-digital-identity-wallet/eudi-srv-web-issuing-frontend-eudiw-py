@@ -60,7 +60,7 @@ To run the EUDIW Issuer Front End, please follow these simple steps (some of whi
     ```
 
 
-5. Install Flask, gunicorn and other dependencies in virtual environment
+5. Install Flask and other dependencies in the virtual environment
 
     ```shell
     pip install -r app/requirements.txt
