@@ -46,8 +46,6 @@ from app.app_config.logging_config import configure_logging
 # Log
 
 oidc_metadata: Dict[str, Any] = {}
-openid_metadata: Dict[str, Any] = {}
-oauth_metadata: Dict[str, Any] = {}
 jwt_vc_issuer_metadata: Dict[str, Any] = {}
 signed_metadata: str = None
 
@@ -168,8 +166,7 @@ def create_app(test_config=None):
     # is no cookie, session or SECRET_KEY, so a cross-site request carries no
     # credentials. The POST routes render pages from what is posted (the
     # backend's auto-submitting pages post to them from another origin; the
-    # data is authenticated by payload_key), and /pushed_authorization is a
-    # wallet API authenticated by the wallet attestation headers.
+    # data is authenticated by payload_key).
     app = Flask(__name__, instance_relative_config=True)  # NOSONAR - CSRF not applicable, see above
     app.config["MAX_CONTENT_LENGTH"] = int(CONFIGURATION.get("max_content_length", DEFAULT_MAX_CONTENT_LENGTH))
 
@@ -219,10 +216,9 @@ def create_app(test_config=None):
         pass
 
     # register blueprint for the /pid route
-    from . import frontend, auth_redirect
+    from . import frontend
 
     app.register_blueprint(frontend.frontend)
-    app.register_blueprint(auth_redirect.authorization_endpoint)
 
     # The frontend keeps no session (no cookie, no SECRET_KEY). Only the
     # public metadata may be read cross-origin, without credentials: browser
@@ -283,9 +279,11 @@ def setup_metadata():
     """Loads this frontend's metadata (unsigned and signed) from the backend.
 
     The backend builds the documents from ``frontends_config.<frontend_id>``
-    (``url``, ``credentials_supported``, ``oauth_url``) and the country
-    signing keys (``jwt_vc_issuer``). The dicts are updated
-    in place so modules that imported them keep a valid reference.
+    (``url``, ``credentials_supported``) and the country signing keys
+    (``jwt_vc_issuer``). The credential issuer metadata names the
+    authorization server in ``authorization_servers``; wallets read that
+    server's metadata there. The dicts are updated in place so modules that
+    imported them keep a valid reference.
     """
     global signed_metadata
 
@@ -298,10 +296,6 @@ def setup_metadata():
 
     oidc_metadata.clear()
     oidc_metadata.update(documents["openid_credential_issuer"])
-    openid_metadata.clear()
-    openid_metadata.update(documents["openid_configuration"])
-    oauth_metadata.clear()
-    oauth_metadata.update(documents["oauth_authorization_server"])
     jwt_vc_issuer_metadata.clear()
     # Absent from backends that predate /.well-known/jwt-vc-issuer.
     jwt_vc_issuer_metadata.update(documents.get("jwt_vc_issuer") or {})

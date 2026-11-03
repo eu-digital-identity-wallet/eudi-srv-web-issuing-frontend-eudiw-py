@@ -23,8 +23,6 @@ backend_url: "https://backend.issuer.eudiw.dev"
 # Other public origins of the backend, if any (form posts are only accepted to these).
 # List of origins; default none.
 # backend_origins: ["https://backend2.issuer.eudiw.dev"]
-# Base URL of the authorization server (pushed authorization requests). Required.
-oauth_url: "https://issuer.eudiw.dev/oidc"
 
 backend_api_key: "change-me" # Must match backend_api_key in the backend config. Required. SECRET.
 

@@ -233,38 +233,6 @@ class TestHeadersAndCors:
         assert "Set-Cookie" not in response.headers
 
 
-class TestParProxy:
-    def test_only_safe_upstream_headers_are_relayed_and_errors_are_generic(self, client, monkeypatch):
-        from unittest import mock
-
-        import requests
-
-        upstream = mock.Mock(status_code=201, content=b'{"request_uri":"u"}')
-        upstream.headers = {"Content-Type": "application/json", "Transfer-Encoding": "chunked", "Set-Cookie": "x=1", "DPoP-Nonce": "n"}
-        monkeypatch.setattr(requests, "post", mock.Mock(return_value=upstream))
-        response = client.post("/pushed_authorization", data={"client_id": "w"})
-        assert response.status_code == 201
-        assert response.headers["DPoP-Nonce"] == "n"
-        assert "Transfer-Encoding" not in response.headers and "Set-Cookie" not in response.headers
-
-        monkeypatch.setattr(requests, "post", mock.Mock(side_effect=requests.ConnectionError("secret internal host:5000")))
-        failure = client.post("/pushed_authorization", data={"client_id": "w"})
-        assert failure.status_code == 502 and "secret internal host" not in failure.get_data(as_text=True)
-
-    def test_wallet_values_are_not_logged(self, client, monkeypatch, caplog):
-        """The client_id was written to the log (SonarCloud: log injection)."""
-        import logging
-        from unittest import mock
-
-        import requests
-
-        upstream = mock.Mock(status_code=201, content=b'{"request_uri":"u"}', headers={})
-        monkeypatch.setattr(requests, "post", mock.Mock(return_value=upstream))
-        with caplog.at_level(logging.DEBUG):
-            client.post("/pushed_authorization", data={"client_id": "w\r\nFORGED log line"})
-        assert "FORGED" not in caplog.text
-
-
 class TestReferrerPolicy:
     """Pages post forms to the backend, whose CSRF check needs the Origin header.
 
@@ -510,34 +478,11 @@ class TestBackendPathPinning:
         assert _post(client, "/display_revocation_qr_code", payload).status_code == 400
 
 
-class TestParProxyLimits:
-    def test_wallet_address_is_forwarded(self, client, monkeypatch):
-        from unittest import mock
-
-        import requests
-
-        upstream = mock.Mock(status_code=201, content=b"{}", headers={})
-        post = mock.Mock(return_value=upstream)
-        monkeypatch.setattr(requests, "post", post)
-        client.post(
-            "/pushed_authorization",
-            data={"client_id": "w"},
-            headers={"X-Forwarded-For": "198.51.100.1"},
-            environ_base={"REMOTE_ADDR": "203.0.113.7"},
-        )
-        assert post.call_args.kwargs["headers"]["X-Forwarded-For"] == "203.0.113.7"
-
-    def test_request_size_is_limited(self, app, client, monkeypatch):
-        from unittest import mock
-
-        import requests
-
-        post = mock.Mock()
-        monkeypatch.setattr(requests, "post", post)
+class TestRequestLimits:
+    def test_request_size_is_limited(self, app, client):
         assert app.config["MAX_CONTENT_LENGTH"] == 1024 * 1024
-        response = client.post("/pushed_authorization", data={"client_id": "w", "x": "a" * (1024 * 1024)})
+        response = client.post("/display_pid_login", data={"x": "a" * (1024 * 1024)})
         assert response.status_code == 413
-        post.assert_not_called()
 
 
 class TestContentSecurityPolicy:
@@ -591,9 +536,14 @@ class TestCleanup:
         html = _html(_post(client, "/display_revocation_qr_code", payload))
         assert 'href="https://backend.test/revocation/revocation_choice"' in html
 
-    def test_oauth_authorization_server_metadata(self, client):
-        assert client.get("/.well-known/oauth-authorization-server").get_json() == {"issuer": "https://backend.test"}
-        assert client.get("/.well-known/openid-configuration").get_json() == {"issuer": "https://fe.test"}
+    @pytest.mark.parametrize("service", ["oauth-authorization-server", "openid-configuration", "unknown"])
+    def test_authorization_server_metadata_is_not_served_here(self, client, service):
+        # Wallets read it from the authorization server in authorization_servers.
+        assert client.get(f"/.well-known/{service}").status_code == 404
+
+    def test_no_pushed_authorization_relay(self, client):
+        # Wallets push authorization requests to the authorization server.
+        assert client.post("/pushed_authorization", data={"client_id": "w"}).status_code in (404, 405)
 
     def test_signed_metadata_unavailable_is_not_a_server_error(self, client, monkeypatch):
         import app as app_module

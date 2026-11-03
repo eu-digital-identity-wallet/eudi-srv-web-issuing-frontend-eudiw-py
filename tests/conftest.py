@@ -19,7 +19,6 @@ service_url: "https://fe.test"
 log_dir: "{_CONFIG_DIR}/logs/logs.log"
 frontend_id: "fe1"
 backend_url: "https://backend.test"
-oauth_url: "https://fe.test/oidc"
 backend_api_key: "{'k' * 40}"
 """
     )
@@ -36,8 +35,6 @@ METADATA = {
             }
         },
     },
-    "openid_configuration": {"issuer": "https://fe.test"},
-    "oauth_authorization_server": {"issuer": "https://backend.test"},
     "jwt_vc_issuer": {"issuer": "https://fe.test", "jwks": {"keys": [{"kty": "EC", "kid": "ds"}]}},
 }
 

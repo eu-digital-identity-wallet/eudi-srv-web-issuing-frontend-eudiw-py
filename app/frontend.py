@@ -38,7 +38,7 @@ from flask import (
 )
 
 import app
-from app import jwt_vc_issuer_metadata, oauth_metadata, oidc_metadata, openid_metadata
+from app import jwt_vc_issuer_metadata, oidc_metadata
 from app import CONFIGURATION
 
 frontend = Blueprint("frontend", __name__, url_prefix="/")
@@ -435,19 +435,16 @@ def well_known(service):
             return resp
         return _json_metadata(oidc_metadata)
 
-    if service == "oauth-authorization-server":
-        return _json_metadata(oauth_metadata)
-
-    if service == "openid-configuration":
-        return _json_metadata(openid_metadata)
-
     if service == "jwt-vc-issuer":
         # SD-JWT VC issuer metadata: issuer is this frontend, the iss of its SD-JWT VCs.
         if not jwt_vc_issuer_metadata:
             return make_response("Not available", 404)
         return _json_metadata(jwt_vc_issuer_metadata)
 
-    return make_response("Not supported", 400)
+    # RFC 8615: a well-known URI that is not defined here does not exist. The
+    # authorization server metadata is served by the authorization server
+    # (authorization_servers in the credential issuer metadata).
+    return make_response("Not supported", 404)
 
 
 @frontend.route("/internal_error", methods=["POST"])

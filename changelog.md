@@ -57,10 +57,10 @@ _06 Oct 2026_
 - Each page only accepts the backend endpoint it posts or links to, on top of the same-origin check.
 - Wallet links on QR pages must be `scheme://` links without `javascript`, `data`, `vbscript`, `file`, `blob` or `about`, as the backend requires.
 - Backend metadata requests do not follow redirects; `backend_url` must be https, except on localhost.
-- The PAR relay sends the wallet's address in `X-Forwarded-For`, reads headers with `.get()`, and no longer logs `client_id`.
+- The pushed authorization relay, `/.well-known/oauth-authorization-server`, `/.well-known/openid-configuration` and `oauth_url` are removed: wallets use the authorization server named in `authorization_servers`.
+- Unknown `/.well-known` documents answer 404 instead of 400.
 - Request bodies are limited to 1 MiB (`max_content_length`).
 - Content-Security-Policy: inline scripts use a per-request nonce instead of `'unsafe-inline'`; `style-src` is `'self' 'unsafe-inline'`.
-- `/.well-known/oauth-authorization-server` serves the backend's OAuth metadata instead of the OpenID configuration.
 - Revocation links pass `frontend_id`, so the backend lists only this frontend's credentials.
 - The consent page shows the attributes named in `image_attributes` as images.
 - Accessibility: labels tied to their controls, `alt` text on images, no `accesskey`.
@@ -73,6 +73,7 @@ _06 Oct 2026_
 - The PID login page polled and opened frontend URLs instead of the backend's `/pid_authorization` and `/getpidoid4vp`.
 - The "back" links of the PID login and revocation QR pages pointed to frontend paths that do not exist.
 - `Accept: application/jwt` without signed metadata returned 500 instead of 406.
+- The authorization server metadata listed `public` instead of `none` in `token_endpoint_auth_methods_supported` (upstream #14).
 - The 404 handler logged a stack trace.
 - QR codes were too small for some phones to scan; they are scaled to 200-280 px.
 - `install.md` and `licenses.md` listed gunicorn, which is not a dependency.
