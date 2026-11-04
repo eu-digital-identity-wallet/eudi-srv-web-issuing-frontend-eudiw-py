@@ -60,18 +60,18 @@ To run the EUDIW Issuer Front End, please follow these simple steps (some of whi
     ```
 
 
-5. Install Flask, gunicorn and other dependencies in virtual environment
+5. Install Flask and other dependencies in the virtual environment
 
     ```shell
     pip install -r app/requirements.txt
     ```
 
-6. Setup env
+6. Setup configuration
    
-   -  Copy ```.frontend_config_example.yaml``` to ```etc/issuer_config/frontend_config_example.yaml``` and modify variables.
+   -  Copy [frontend_config_example.yaml](frontend_config_example.yaml) to ```/etc/issuer_config/frontend_config.yaml``` and modify variables.
 
    ```shell
-   cp .frontend_config_example.yaml etc/issuer_config/frontend_config_example.yaml
+   cp frontend_config_example.yaml /etc/issuer_config/frontend_config.yaml
    ```
    Configuration location can be changed using environment variable ISSUER_CONFIG_PATH
 
@@ -177,14 +177,18 @@ This guide provides step-by-step instructions for deploying the **EUDIW Issuer**
     * **Customize the configuration:** Review and modify the local `docker-compose.yml` file to align with your specific deployment requirements (e.g., exposed ports, service names, volumes).
     * *Reference file:* [docker-compose.yml](./docker-compose.yml)
 
-3. Set Up Environment Variables
+3. Set Up configuration file
 
-    Service parameters and sensitive settings are managed through an environment file.
+    Service parameters and sensitive settings are managed through a configuration file.
 
-    * **Create the environment file:** We recommend copying the example file to create your local configuration.
+    * **Create the configuration file:** Copy the example file to the path mounted in `docker-compose.yml`.
 
-    * **Update variables:** Edit the newly created `.env` file with your specific settings and credentials.
-        * *Reference example:* [.env example](.env.example)
+        ```
+        cp frontend_config_example.yaml /etc/issuer_config/frontend_config.yaml
+        ```
+
+    * **Update variables:** Edit `/etc/issuer_config/frontend_config.yaml` with your specific settings, according to the [documentation](api_docs/configuration.md); every setting is commented.
+        * *Reference example:* [frontend_config_example.yaml](./frontend_config_example.yaml)
 
 
 4. Pull the Docker Image
@@ -193,9 +197,9 @@ This guide provides step-by-step instructions for deploying the **EUDIW Issuer**
     docker compose pull
     ```
 
-5. Run the 
+5. Run the service
 
-    Start the EUDIW Issuer backend in detached mode (runs in the background):
+    Start the EUDIW Issuer frontend in detached mode (runs in the background):
 
     ```
     docker compose up -d

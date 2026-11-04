@@ -27,9 +27,10 @@
         charset="UTF-8"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='scripts/respond/respond-1.4.2.js') }}"
         charset="UTF-8"></script>
-    <meta name="referrer" content="no-referrer">
+    <meta name="referrer" content="strict-origin">
 
     <title>Confirm data from your EUDI Wallet</title>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/page-actions.js') }}" charset="UTF-8" defer="true"></script>
 </head>
 
 {# ===================================================================== #}
@@ -40,7 +41,7 @@
 {# It's a nested dictionary (like place_of_birth) #}
 {% if value is mapping %}
 <div class="attribute-block">
-    <label class="font-pf block font-bold text-custom-gray">{{ name | replace('_', ' ') | title }}</label>
+    <p class="font-pf block font-bold text-custom-gray">{{ name | replace('_', ' ') | title }}</p>
     <div class="mt-2 pl-4 border-l-2 border-gray-400 space-y-3">
         {% for sub_name, sub_value in value.items() %}
             {{ render_attribute_display(sub_name, sub_value) }}
@@ -51,7 +52,7 @@
 {# It's a list of items (like nationalities, driving_privileges) #}
 {% elif value is sequence and value is not string %}
 <div class="attribute-block">
-    <label class="font-pf block font-bold text-custom-gray">{{ name | replace('_', ' ') | title }}</label>
+    <p class="font-pf block font-bold text-custom-gray">{{ name | replace('_', ' ') | title }}</p>
     <div class="mt-2 pl-4 border-l-2 border-gray-400 space-y-3">
         {% for item in value %}
         <div class="bg-white/60 p-3 rounded-md">
@@ -68,16 +69,16 @@
 </div>
 
 {# It's an image #}
-{% elif name in ["portrait", "issuing_authority_logo", "signature_usual_mark_issuing_officer", "image"] %}
+{% elif name in image_attributes %}
 <div class="attribute-block">
-    <label class="block text-base font-bold text-custom-gray">{{ name | title }}</label>
-    <img class="mt-1 rounded-lg shadow-md w-32 h-32 object-cover" src="data:image/jpeg;base64,{{ value }}">
+    <p class="font-pf block font-bold text-custom-gray">{{ name | replace('_', ' ') | title }}</p>
+    <img class="mt-1 rounded-lg shadow-md h-32 max-w-full object-contain" src="data:image/jpeg;base64,{{ value }}" alt="{{ name | replace('_', ' ') | title }}">
 </div>
 
 {# It's a simple value (string, number, etc.) #}
 {% else %}
 <div class="attribute-block">
-    <label class="font-pf block font-bold text-custom-gray">{{ name | replace('_', ' ') | title }}</label>
+    <p class="font-pf block font-bold text-custom-gray">{{ name | replace('_', ' ') | title }}</p>
     <p class="font-pf text-base text-custom-gray mt-1">{{ value }}</p>
 </div>
 {% endif %}
@@ -134,7 +135,7 @@
                     </button>
                     <button type="button" name="Cancelled"
                         class="w-full border-gray-400 text-gray-500 font-semibold py-2 rounded-lg"
-                        onclick="window.history.back();">
+                        data-action="back">
                         Cancel
                     </button>
                 </div>

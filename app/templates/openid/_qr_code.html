@@ -1,0 +1,14 @@
+{#- QR code with its instructions (credential offer and OID4VP pages). -#}
+{% macro qr_code(qrcode) -%}
+<h2>QR Code</h2>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        {#- The backend renders 2-3 px per module; upscale crisply so phones can scan it. -#}
+        <img src="{{ qrcode }}" alt="QR code to scan with your EUDI Wallet"
+             style="width: 100%; max-width: 280px; min-width: 200px; image-rendering: pixelated;">
+    </div>
+    <div class="col-md-3 col-md-offset-2">
+        <p>Scan the QR Code with your phone's camera app or click Request to be redirected</p>
+    </div>
+</div>
+{%- endmacro %}

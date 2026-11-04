@@ -31,7 +31,7 @@
         charset="UTF-8"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='scripts/respond/respond-1.4.2.js') }}"
         charset="UTF-8"></script>
-    <meta name="referrer" content="no-referrer">
+    <meta name="referrer" content="strict-origin">
     <script type="text/javascript"
         src="{{ url_for('static', filename='scripts/loc/loc_en_9.7.1.20.1679559965505.js') }}" charset="UTF-8"></script>
     <title>Request Credentials for your EUDI Wallet</title>
@@ -42,7 +42,7 @@
         <header role="banner" class="main-header">
             <div class="container">
                 <div class="row">
-                    <img src="{{url_for('static', filename='ic-logo.svg')}}">
+                    <img src="{{url_for('static', filename='ic-logo.svg')}}" alt="EUDI Wallet logo">
                 </div>
             </div>
         </header>
@@ -63,7 +63,7 @@
                                     <label >
                                         <input id="optionsRadios" type="radio" name="optionsRadios"
                                                 value="link1" style="transform: scale(1.3);">
-                                            PID Authentication <img src="{{url_for('static', filename='ic-logo.svg')}}"
+                                            PID Authentication <img src="{{url_for('static', filename='ic-logo.svg')}}" alt="" aria-hidden="true"
                                                 width="30%">
                                     </label>
                                 {% endif %}
@@ -72,22 +72,21 @@
                                     <label style="padding-top: 5%;">
                                         <input id="optionsRadios"  type="radio" name="optionsRadios"
                                                 value="link2" style="transform: scale(1.3);">
-                                                Country Selection       <img style="padding-left: 5%;" src="{{url_for('static', filename='EU_flag.jpg')}}"
+                                                Country Selection       <img style="padding-left: 5%;" src="{{url_for('static', filename='EU_flag.jpg')}}" alt="" aria-hidden="true"
                                                 width="17%">
                                     </label>
                                 {% endif %}
                             </div>
 
                             <span class="more-submit">
-                                <input type="submit" name="proceed" accesskey="S" value="Submit" class="btn btn-primary"
-                                    title="Submit" id="btncheck" disabled ><input type="submit" name="Cancelled"
-                                    accesskey="C" value="Cancel" id="cancelBtnId"
+                                <input type="submit" name="proceed" value="Submit" class="btn btn-primary"
+                                    title="Submit" id="btncheck" disabled ><input type="submit" name="Cancelled" value="Cancel" id="cancelBtnId"
                                     class="btn btn-cancel btn-alternate cancellable" title="Cancel" />
                             </span>
                         </form>
 
                     </div>
-                    <h2 id="validation-message"></h2>
+                    <div id="validation-message" class="h2" role="status" aria-live="polite"></div>
 
                 </div>
             </div>
@@ -95,7 +94,7 @@
     </div>
     <!-- Version 9.7.1.20 - 23/03/2023 - 09:26 -->
 </body>
-<script>
+<script nonce="{{ csp_nonce() }}">
     var radioButtons = document.querySelectorAll('input[name="optionsRadios"]');
     var submitButton = document.getElementById('btncheck');
   

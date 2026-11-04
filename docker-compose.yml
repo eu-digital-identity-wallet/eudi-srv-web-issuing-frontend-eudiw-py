@@ -1,8 +1,12 @@
 services:
   issuer_frontend:
     image: ghcr.io/eu-digital-identity-wallet/eudi-srv-web-issuing-frontend-eudiw-py:latest
+    # host:container; the container listens on 5000.
     ports:
       - "6007:5000"
+    # Log mount: must hold the directory of log_dir in frontend_config.yaml and
+    # be writable by the container user (UID 10001). The configuration
+    # (contains secrets) is mounted read-only at the ISSUER_CONFIG_PATH default.
     volumes:
       - /tmp/issuer_frontend/log_dev:/tmp/issuer_frontend/log_dev
       - /etc/issuer_config/frontend_config.yaml:/etc/issuer_config/frontend_config.yaml:ro

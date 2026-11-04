@@ -1,38 +1,36 @@
-service_url: "https://issuer.eudiw.dev"
-log_dir: "/tmp/issuer_frontend/logs/logs.log"
+# frontend_config.yaml - EUDIW Issuer Front-end configuration.
+# Read from ISSUER_CONFIG_PATH (default /etc/issuer_config/frontend_config.yaml).
+# Keys shown commented out are optional; their default is the value shown.
+# Contains SECRETS (backend_api_key, payload_key): do not commit the real file.
 
+# Public base URL of this frontend, no trailing slash: the credential issuer
+# identifier advertised in the metadata. Required.
+service_url: "https://issuer.eudiw.dev"
+# Log file (its directory is created at start-up). Required.
+log_dir: "/tmp/issuer_frontend/logs/logs.log"
+# Log level (default "INFO"): DEBUG, INFO, WARNING, ERROR or CRITICAL.
+# log_level: "INFO"
+
+# Id of this frontend in the backend's frontend.frontends_config. Required:
+# the backend serves this frontend's metadata under it, and it is the aud of
+# signed display payloads.
 frontend_id: "5d725b3c-6d42-448e-8bfd-1eff1fcf152d"
 
+# Public base URL of the backend. Required; must be https (http only for
+# localhost, 127.0.0.1 or ::1), as the API key is sent to it. Pages only post
+# and navigate to this origin.
 backend_url: "https://backend.issuer.eudiw.dev"
-oauth_url: "https://issuer.eudiw.dev/oidc"
+# Other public origins of the backend, if any (form posts are only accepted to these).
+# List of origins; default none.
+# backend_origins: ["https://backend2.issuer.eudiw.dev"]
 
-credentials_supported:
-    - "org.iso.18013.5.1.reservation_mdoc"
-    - "eu.europa.ec.eudi.cor_mdoc"
-    - "eu.europa.ec.eudi.diploma_vc_sd_jwt"
-    - "eu.europa.ec.eudi.ehic_sd_jwt_vc"
-    - "eu.europa.ec.eudi.ehic_mdoc"
-    - "eu.europa.ec.eudi.employee_mdoc"
-    - "eu.europa.ec.eudi.hiid_sd_jwt_vc"
-    - "eu.europa.ec.eudi.hiid_mdoc"
-    - "eu.europa.ec.eudi.iban_sd_jwt_vc"
-    - "eu.europa.ec.eudi.iban_mdoc"
-    - "eu.europa.ec.eudi.loyalty_mdoc"
-    - "eu.europa.ec.eudi.mdl_mdoc"
-    - "eu.europa.ec.eudi.msisdn_sd_jwt_vc"
-    - "eu.europa.ec.eudi.msisdn_mdoc"
-    - "eu.europa.ec.eudi.pda1_sd_jwt_vc"
-    - "eu.europa.ec.eudi.pda1_mdoc"
-    - "eu.europa.ec.eudi.photoid"
-    - "eu.europa.ec.eudi.pid_vc_sd_jwt"
-    - "eu.europa.ec.eudi.pid_mdoc_deferred"
-    - "eu.europa.ec.eudi.pid_mdoc"
-    - "eu.europa.ec.eudi.por_sd_jwt_vc"
-    - "eu.europa.ec.eudi.por_mdoc"
-    - "eu.europa.ec.eudi.seafarer_mdoc"
-    - "eu.europa.ec.eudi.tax_sd_jwt_vc"
-    - "eu.europa.ec.eudi.tax_mdoc"
-    - "eu.europa.ec.eudi.tax_residency_vc_sd_jwt"
-    - "eu.europa.ec.eudi.learning_credential_vc_sd_jwt"
-    - "eu.europa.ec.eudi.aamva_mdl_mdoc"
-    - "org.iso.7367.2.1.mVC_mdoc"
+backend_api_key: "change-me" # Must match backend_api_key in the backend config. Required. SECRET.
+
+# Shared secret the backend signs display payloads with (payload_jwt, HS256); must
+# match the backend's key for this frontend. Without it the /display_* pages accept
+# unauthenticated payloads (a warning is logged at start-up).
+# Default unset. SECRET; at least 32 characters (the backend refuses shorter).
+# payload_key: "change-me"
+
+# Maximum request body size in bytes (default 1 MiB).
+# max_content_length: 1048576

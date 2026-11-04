@@ -1,0 +1,56 @@
+{#- Page frame shared by the frontend pages: head, header with logo, main
+    container. Pages extend it and fill the blocks:
+      meta_title / meta_keywords / meta_description, head_extra, title,
+      body_id, logo, content, footer, scripts. -#}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no" />
+    <meta name="Title" content="{% block meta_title %}Request Credentials{% endblock %}" />
+    <meta name="Keywords" content="{% block meta_keywords %}EUDI Wallet, Credentials, Enrolment{% endblock %}" />
+    <meta name="Description" content="{% block meta_description %}Request Credentials for EUDI Wallet{% endblock %}" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/vnd.microsoft.icon" />
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.gif') }}" type="image/gif" />
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}" />
+    <link href="{{ url_for('static', filename='bootstrap-3.4.1-dist/css/bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static', filename='css/stylesheets/custom/custom_en_9.7.1.20.1679559965505.css') }}" media="all" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static', filename='fontawesome-free-5.15.4-web/css/fontawesome.min.css') }}" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" id="jqueryId" src="{{ url_for('static', filename='scripts/jquery/jquery-3.6.3.min.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/promiz/promiz-1.0.6.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='bootstrap-3.4.1-dist/js/bootstrap.min.js') }}" charset="UTF-8" defer="true"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/html5shiv/html5shiv-3.7.3.js') }}" charset="UTF-8"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/respond/respond-1.4.2.js') }}" charset="UTF-8"></script>
+    <meta name="referrer" content="strict-origin">
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/loc/loc_en_9.7.1.20.1679559965505.js') }}" charset="UTF-8"></script>
+    {% block head_extra %}{% endblock %}
+    <title>{% block title %}Request Credentials for your EUDI Wallet{% endblock %}</title>
+</head>
+
+<body id="{% block body_id %}responsive-main-nav1{% endblock %}">
+    <div class="main container-fluid">
+        <header role="banner" class="main-header">
+            <div class="container">
+                <div class="row">
+                    {% block logo %}<img src="{{ url_for('static', filename='ic-logo.svg') }}" alt="EUDI Wallet logo">{% endblock %}
+                </div>
+            </div>
+        </header>
+        <div role="main" class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% block footer %}{% endblock %}
+    <!-- Version 9.7.1.20 - 23/03/2023 - 09:26 -->
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>
