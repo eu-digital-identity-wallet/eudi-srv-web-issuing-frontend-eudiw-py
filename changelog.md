@@ -46,7 +46,16 @@ _06 Oct 2026_
 - Pages use the `strict-origin` referrer policy instead of `no-referrer`: with `no-referrer` browsers send `Origin: null` on form posts, which the backend's CSRF check rejects.
 - The Content-Security-Policy has no `form-action`: browsers apply it to redirects too, which blocked the backend's redirect to the authorization server after consent.
 
-## [Unreleased]
+## [0.10.0]
+
+_07 Oct 2026_
+
+### Added
+- Passthrough registration certificate from backend
+
+## [0.11.0]
+
+_04 Nov 2026_
 
 ### Added
 - `payload_key`: the `/display_*` pages and `/internal_error` require `payload_jwt`, an HS256 JWT from the backend (`aud` = `frontend_id`, at most 300 s), instead of a plain `payload`.
