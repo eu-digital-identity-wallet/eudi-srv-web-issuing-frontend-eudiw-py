@@ -4,7 +4,7 @@ For configuring your locally installed version of the EUDIW Issuer Front-end, yo
 
 ## 1. Service Configuration
 
-Base configuration example for the EUDIW Issuer Front-end is located in ```frontend_config_example.yaml```.
+Base configuration example for the EUDIW Issuer Front-end is located in [frontend_config_example.yaml](../frontend_config_example.yaml).
 
 Parameters that should be changed:
 
@@ -23,6 +23,6 @@ Optional parameters (defaults in brackets):
 
 `backend_url` must be https; plain http is only accepted for `localhost`, `127.0.0.1` and `::1`, because the API key is sent to it.
 
-Every key is described in `frontend_config_example.yaml`.
+Every key is described in [frontend_config_example.yaml](../frontend_config_example.yaml).
 
 The front-end's metadata (`/.well-known/openid-credential-issuer` and `/.well-known/jwt-vc-issuer`) is loaded from the backend at start-up (`GET /metadata/<frontend_id>` and `GET /metadata/<frontend_id>/signed`). The credentials it advertises (`credentials_supported`) are therefore configured in the backend, under `frontend.frontends_config.<frontend_id>`. Its `authorization_servers` names the front-end's own issuer at the authorization server, `<authorization_server.base_url>/<frontend_id>`: wallets push authorization requests to, and read the metadata of, that issuer, not the front-end.

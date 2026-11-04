@@ -77,3 +77,4 @@ _06 Oct 2026_
 - The 404 handler logged a stack trace.
 - QR codes were too small for some phones to scan; they are scaled to 200-280 px.
 - `install.md` and `licenses.md` listed gunicorn, which is not a dependency.
+- `install.md`: wrong example and target configuration file names; the Docker steps linked a missing `.env.example`.
