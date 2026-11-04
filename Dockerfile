@@ -40,8 +40,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=python-builder /install /usr/local
+# Only the application code (no tests, docs or local state), then the built CSS.
+COPY app/ ./app/
 COPY --from=node-builder /build/app/static/css/tailwind.css ./app/static/css/tailwind.css
-COPY . .
+
+# Unprivileged user (fixed UID so host-mounted log directories can be
+# granted to it: chown 10001 <log dir>).
+RUN useradd --system --uid 10001 --no-create-home --shell /usr/sbin/nologin issuer \
+ && mkdir -p /tmp/issuer_frontend/logs /tmp/issuer_frontend/log_dev \
+ && chown -R issuer:issuer /app /tmp/issuer_frontend
+
+USER issuer
 
 ENV FLASK_APP=app
 

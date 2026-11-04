@@ -1,0 +1,50 @@
+{#- QR code page that waits for the wallet's OID4VP presentation, then
+    redirects. Pages extending it set back_href, poll_url and done_url. -#}
+{% extends "layout/base.html" %}
+{% from "openid/_qr_code.html" import qr_code with context %}
+
+{% block content %}
+<h1>Request Credentials for your EUDI Wallet</h1>
+<div id="content" class="content-wrap1 content-center col-md-6 text-center">
+    {{ qr_code(qrcode) }}
+
+    <a href="{{ url_data }}" class="btn btn-primary">Request</a>
+    <a href="{{ back_href }}" class="btn btn-back">Back</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce() }}">
+var presentation_id = {{ presentation_id | tojson }};
+function Ajax_request() {
+    $.ajax({
+        url: {{ poll_url | tojson }},
+        method: 'GET',
+        data:{"presentation_id": presentation_id },
+        success: function(response) {
+            console.log('Success:', response);
+            window.location.replace({{ done_url | tojson }} + "?presentation_id=" + encodeURIComponent(presentation_id));
+            clearInterval(intervalId);
+        },
+        error: function(xhr, status, error) {
+            console.error('Error:', error);
+        }
+    });
+}
+
+function makeRequests() {
+    let counter = 0;
+    const intervalId = setInterval(() => {
+        if (counter >= 15) {
+            clearInterval(intervalId);
+            console.log('Stopped making requests after 30 seconds.');
+        } else {
+            Ajax_request();
+            counter++;
+        }
+    }, 4000);
+}
+
+makeRequests();
+</script>
+{% endblock %}

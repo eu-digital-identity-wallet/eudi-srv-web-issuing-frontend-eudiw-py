@@ -9,6 +9,7 @@
    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
    <link href="{{ url_for('static', filename='css/tailwind.css') }}" rel="stylesheet">
    <title>Request Credentials for your EUDI Wallet</title>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/page-actions.js') }}" charset="UTF-8" defer="true"></script>
 </head>
 <body class="font-pf">
    <!-- This is the main container that drives the sticky footer layout -->
@@ -57,7 +58,7 @@
                Submit
                </button>
                <button type="button" name="Cancelled" class="w-full text-gray-500 font-semibold py-2"
-                  onclick="window.history.back();">
+                  data-action="back">
                Cancel
                </button>
             </div>
